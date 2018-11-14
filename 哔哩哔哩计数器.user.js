@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         哔哩哔哩计数器
 // @namespace    https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
-// @version      1.6
+// @version      1.7
 // @description  显示哔哩哔哩上传视频数的实际计数
 // @author       lxfly2000
 // @match        *://www.bilibili.com/
@@ -58,7 +58,7 @@ function getTagList(homelink){
 }
 
 function buildTagList(src_text){
-    var zoneConfigReg=new RegExp("Gi=\\[[^\\[\\]]+\\]");
+    var zoneConfigReg=new RegExp("\\[{type:[^\\[\\]]+\\]");
     var zoneConfigText="";
     var regmatch=src_text.match(zoneConfigReg);
     if(regmatch==null){
