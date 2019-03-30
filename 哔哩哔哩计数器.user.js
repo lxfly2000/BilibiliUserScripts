@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         哔哩哔哩计数器
 // @namespace    https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
-// @version      1.7
+// @version      1.7.1
 // @description  显示哔哩哔哩上传视频数的实际计数
 // @author       lxfly2000
 // @match        *://www.bilibili.com/
@@ -72,7 +72,7 @@ function buildTagList(src_text){
     var namesMatch=zoneConfigText.match(nameReg);
     var tidsMatch=zoneConfigText.match(tidReg);
     for(var i=0;i<namesMatch.length;i++){
-        tagNameTable[tidsMatch[i].substr(4)]=namesMatch[i].substring(6,namesMatch[i].lastIndexOf("\""));//注意tid要转换成字符串
+        tagNameTable[tidsMatch[i].substring(4)]=namesMatch[i].substring(6,namesMatch[i].lastIndexOf("\""));//注意tid要转换成字符串
     }
 
     var xhr=new XMLHttpRequest();
