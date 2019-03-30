@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         哔哩哔哩计数器
 // @namespace    https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
-// @version      1.7.1
+// @version      1.7.2
 // @description  显示哔哩哔哩上传视频数的实际计数
 // @author       lxfly2000
 // @match        *://www.bilibili.com/
@@ -71,8 +71,16 @@ function buildTagList(src_text){
     var tidReg=new RegExp("tid:[^,]+","g");
     var namesMatch=zoneConfigText.match(nameReg);
     var tidsMatch=zoneConfigText.match(tidReg);
-    for(var i=0;i<namesMatch.length;i++){
-        tagNameTable[tidsMatch[i].substring(4)]=namesMatch[i].substring(6,namesMatch[i].lastIndexOf("\""));//注意tid要转换成字符串
+    for(var i=0;i<namesMatch.length;){
+        //2019-3-30：分区配置中多出一个“专栏”的项目，但它没有tid属性因此先排除。
+        var name=namesMatch[i].substring(6,namesMatch[i].lastIndexOf("\""));
+        if(name=="专栏"){
+            namesMatch.splice(i,1);
+            console.log("%c专栏暂时没有统计数据。","color:DeepPink;font-size:400%;font-family:PingFang SC,Microsoft Yahei,SimSun");
+        }else{
+            tagNameTable[tidsMatch[i].substring(4)]=name;//注意tid要转换成字符串
+            i++;
+        }
     }
 
     var xhr=new XMLHttpRequest();
