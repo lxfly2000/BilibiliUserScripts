@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         哔哩哔哩计数器
 // @namespace    https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
-// @version      1.7.2
+// @version      1.7.3
 // @description  显示哔哩哔哩上传视频数的实际计数
 // @author       lxfly2000
 // @match        *://www.bilibili.com/
@@ -70,13 +70,14 @@ function buildTagList(src_text){
     var nameReg=new RegExp("name:\"[^\"]+\"","g");
     var tidReg=new RegExp("tid:[^,]+","g");
     var namesMatch=zoneConfigText.match(nameReg);
-    var tidsMatch=zoneConfigText.match(tidReg);
+    var tidsMatch=zoneConfigText.match(tidReg);//因为它并不是标准的JSON格式所以就没法用JSON的方式了
     for(var i=0;i<namesMatch.length;){
         //2019-3-30：分区配置中多出一个“专栏”的项目，但它没有tid属性因此先排除。
+        //2019-8-8：分区配置中又多出一个“漫画”的项目，同上
         var name=namesMatch[i].substring(6,namesMatch[i].lastIndexOf("\""));
-        if(name=="专栏"){
+        if(name=="专栏"||name=="漫画"){
             namesMatch.splice(i,1);
-            console.log("%c专栏暂时没有统计数据。","color:DeepPink;font-size:400%;font-family:PingFang SC,Microsoft Yahei,SimSun");
+            console.log(`%c${name}暂时没有统计数据。`,"color:DeepPink;font-size:400%;font-family:PingFang SC,Microsoft Yahei,SimSun");//这个叫模板字符串，是ES6中新引入的。
         }else{
             tagNameTable[tidsMatch[i].substring(4)]=name;//注意tid要转换成字符串
             i++;
