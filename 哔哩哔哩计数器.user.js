@@ -1,7 +1,9 @@
 // ==UserScript==
 // @name         哔哩哔哩计数器
 // @namespace    https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
-// @version      1.7.3
+// @version      1.7.4
+// @updateURL    https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
+// @downloadURL  https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
 // @description  显示哔哩哔哩上传视频数的实际计数
 // @author       lxfly2000
 // @match        *://www.bilibili.com/
