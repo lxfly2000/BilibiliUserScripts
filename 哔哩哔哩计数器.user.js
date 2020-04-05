@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         哔哩哔哩计数器
 // @namespace    https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
-// @version      1.7.4
+// @version      2
 // @updateURL    https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
 // @downloadURL  https://github.com/lxfly2000/BilibiliCounter/raw/master/哔哩哔哩计数器.user.js
 // @description  显示哔哩哔哩上传视频数的实际计数
 // @author       lxfly2000
-// @match        *://www.bilibili.com/
-// @match        *://www.bilibili.com/*
+// @match        *://*.bilibili.com/
+// @match        *://*.bilibili.com/*
 // @grant        none
 // ==/UserScript==
 
@@ -18,7 +18,7 @@
 })();
 
 var tagListItem={};//分区名（网页上）——DOM节点
-var tagNameTable={"167":"国创"};//tid与分区名（ZoneConfig定义）转换表
+var tagNameTable={};//tid与分区名（ZoneConfig定义）转换表
 
 function bilibiliCounter(){
     getHomeLink();
@@ -30,7 +30,8 @@ function getHomeLink(){
     xhr.onreadystatechange=function(){
         if(xhr.readyState==4&&xhr.status==200){
             var homelink="";
-            var homereg=new RegExp("//s[0-9]\\.hdslb\\.com/bfs/static/jinkela/home/home\\.?[^\\.]+\\.js");
+            //2020-4-5：首页被替换为新版主页
+            var homereg=new RegExp("//s[0-9]\\.hdslb\\.com/bfs/static/jinkela/international-home/international-home\\.?[^\\.]+\\.js");
             var regMatch=xhr.responseText.match(homereg);
             if(regMatch==null){
                 console.log("无法找到对应的脚本URL。");
@@ -60,30 +61,17 @@ function getTagList(homelink){
 }
 
 function buildTagList(src_text){
-    var zoneConfigReg=new RegExp("\\[{type:[^\\[\\]]+\\]");
-    var zoneConfigText="";
-    var regmatch=src_text.match(zoneConfigReg);
-    if(regmatch==null){
-        console.log("无法找到分区配置。");
-        return;
-    }else{
-        zoneConfigText=regmatch[0];
-    }
-    var nameReg=new RegExp("name:\"[^\"]+\"","g");
-    var tidReg=new RegExp("tid:[^,]+","g");
-    var namesMatch=zoneConfigText.match(nameReg);
-    var tidsMatch=zoneConfigText.match(tidReg);//因为它并不是标准的JSON格式所以就没法用JSON的方式了
-    for(var i=0;i<namesMatch.length;){
-        //2019-3-30：分区配置中多出一个“专栏”的项目，但它没有tid属性因此先排除。
-        //2019-8-8：分区配置中又多出一个“漫画”的项目，同上
-        var name=namesMatch[i].substring(6,namesMatch[i].lastIndexOf("\""));
-        if(name=="专栏"||name=="漫画"){
-            namesMatch.splice(i,1);
-            console.log(`%c${name}暂时没有统计数据。`,"color:DeepPink;font-size:400%;font-family:PingFang SC,Microsoft Yahei,SimSun");//这个叫模板字符串，是ES6中新引入的。
+    tagNameTable={};
+    var dicMatch=src_text.match(/\{[^{}]*name: *"[^"]*",[^{}]*tid: *\d+/g);
+    for(var i=0;i<dicMatch.length;){
+        var name=dicMatch[i].match(/name: *"([^"]*)"/)[1];
+        var tid=dicMatch[i].match(/tid: *(\d+)/)[1];
+        if(tagNameTable[tid]==undefined||tagNameTable[tid]==null){
+            tagNameTable[tid]=new Set([name]);
         }else{
-            tagNameTable[tidsMatch[i].substring(4)]=name;//注意tid要转换成字符串
-            i++;
+            tagNameTable[tid].add(name);//注意tid要转换成字符串
         }
+        i++;
     }
 
     var xhr=new XMLHttpRequest();
@@ -97,44 +85,45 @@ function buildTagList(src_text){
 }
 
 function writeCounter(jsonData){
-    var doms;
+    tagListItem={};
     try{
-        doms=document.getElementById("primary_menu").getElementsByTagName("ul")[0].childNodes;
-    }catch(e){
-        return;
-    }
-    for(var i=0;i<doms.length;i++){
-        try{
-            tagListItem[doms[i].getElementsByClassName("nav-name")[0].textContent]=doms[i].getElementsByClassName("num-wrap")[0].getElementsByTagName("span")[0];
-        }catch(e){
-            //Nothing to do.
+        var doms=document.getElementById("primaryChannelMenu").childNodes;
+        for(var i=0;i<doms.length;i++){
+            try{
+                tagListItem[doms[i].getElementsByClassName("item")[0].childNodes[0].childNodes[0].childNodes[0].textContent]=doms[i].getElementsByTagName("em")[0];
+            }catch(e){
+                console.log("建立节点表时错误。"+e.message);
+            }
         }
+    }catch(e){
+        console.log("未找到DOM子节点。");
+        return;
     }
 
     var counterData=jsonData.data.region_count;
     var countFangYingTing=0;
-    for(var kn in counterData){
-        var tagName=getBiliTagNameById(kn);
-        setTagCounter(tagName,counterData[kn]);
-        switch(tagName){
-            case "纪录片":case "电影":case "电视剧":
-                countFangYingTing+=counterData[kn];
-                break;
-            default:break;
+    for(var kn_tid in counterData){
+        try{
+            for(var tagName of tagNameTable[kn_tid]){
+                setTagCounter(tagName,counterData[kn_tid]);
+                switch(tagName){
+                    case "纪录片":case "电影":case "电视剧":
+                        countFangYingTing+=counterData[kn_tid];
+                        break;
+                    default:break;
+                }
+            }
+        }catch(e){
+            setTagCounter(kn_tid,counterData[kn_tid]);
         }
     }
     setTagCounter("放映厅",countFangYingTing);
     console.log("%c哔哩哔哩计数器加载完毕。","color:DarkOrange;font-size:large;font-family:PingFang SC,Microsoft Yahei,SimSun");
 }
 
-function getBiliTagNameById(tid){
-    return tagNameTable[tid];
-}
-
 function setTagCounter(tagName,count){
     var logstr=tagName+"区今日上传数："+count;
     try{
-        tagListItem[tagName].style.maxWidth="none";
         tagListItem[tagName].textContent=count.toString();
     }catch(e){
         logstr+="，未在网页中显示。";
