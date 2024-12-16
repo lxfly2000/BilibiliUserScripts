@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         自动展开弹幕列表
 // @namespace    https://github.com/lxfly2000/BilibiliUserScripts/raw/master/自动展开弹幕列表.user.js
-// @version      1.0.0
+// @version      1.0.1
 // @updateURL    https://github.com/lxfly2000/BilibiliUserScripts/raw/master/自动展开弹幕列表.user.js
 // @downloadURL  https://github.com/lxfly2000/BilibiliUserScripts/raw/master/自动展开弹幕列表.user.js
 // @description  自动展开弹幕列表
@@ -14,10 +14,14 @@
 (function() {
     "use strict";
 
+    addEventListener("load",bilibiliAutoUnfoldDanmakuList);//等页面加载完后再执行
+})();
+
+function bilibiliAutoUnfoldDanmakuList(){
     var headers=document.getElementsByClassName('bui-collapse-header');
     for(var h of headers){
         if(h.parentElement.classList.contains('bui-collapse-wrap-folded')){
             h.click();
         }
     }
-})();
+}
